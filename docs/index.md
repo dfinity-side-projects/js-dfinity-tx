@@ -4,7 +4,6 @@
 
 -   [index](#index)
     -   [serialize](#serialize)
-    -   [serialize](#serialize-1)
     -   [sign](#sign)
     -   [hash](#hash)
     -   [recoverPublicKey](#recoverpublickey)
@@ -12,19 +11,14 @@
 
 ## index
 
-[index.js:12-134](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L12-L134 "Source code on GitHub")
+[index.js:22-131](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L22-L131 "Source code on GitHub")
 
 **Extends Message**
 
 This implements basic functions relating to Dfinity Transactions
 
-### serialize
-
-[index.js:31-46](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L31-L46 "Source code on GitHub")
-
 **Parameters**
 
--   `inculdeSig`   (optional, default `this.signature.length!==0`)
 -   `version` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** the tx version (optional, default `0`)
 -   `to` **[Buffer](https://nodejs.org/api/buffer.html)** the address of the contract this tx is too (optional, default `newUint8Array(20)`)
 -   `caps` **[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** the number of repsonse capablities this message has (optional, default `0`)
@@ -38,7 +32,7 @@ This implements basic functions relating to Dfinity Transactions
 
 ### serialize
 
-[index.js:31-46](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L31-L46 "Source code on GitHub")
+[index.js:28-43](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L28-L43 "Source code on GitHub")
 
 serializes the message
 
@@ -50,7 +44,7 @@ Returns **[Buffer](https://nodejs.org/api/buffer.html)**
 
 ### sign
 
-[index.js:53-60](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L53-L60 "Source code on GitHub")
+[index.js:50-57](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L50-L57 "Source code on GitHub")
 
 signs a message and returns the serialized and signed message
 
@@ -62,7 +56,7 @@ Returns **[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe
 
 ### hash
 
-[index.js:67-73](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L67-L73 "Source code on GitHub")
+[index.js:64-70](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L64-L70 "Source code on GitHub")
 
 Gets the SHA-256 hash for some given data
 
@@ -74,7 +68,7 @@ Returns **[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe
 
 ### recoverPublicKey
 
-[index.js:80-91](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L80-L91 "Source code on GitHub")
+[index.js:77-88](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L77-L88 "Source code on GitHub")
 
 Recovers a public key from a signed message
 
@@ -86,7 +80,7 @@ Returns **[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe
 
 ### deserialize
 
-[index.js:98-117](https://github.com/dfinity/js-dfinity-tx/blob/fe1f08065fbd4788aea41d69b758c49fc4003cd6/index.js#L98-L117 "Source code on GitHub")
+[index.js:95-114](https://github.com/dfinity/js-dfinity-tx/blob/416a1dac116025fbd44f593b7091639366d04fa7/index.js#L95-L114 "Source code on GitHub")
 
 deserializes the message and returns a new instance of `DfinityTx`
 

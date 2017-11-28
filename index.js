@@ -8,21 +8,18 @@ const crypto = require('node-webcrypto-shim')
 
 /**
  * This implements basic functions relating to Dfinity Transactions
+ * @param {Number} [version=0] - the tx version
+ * @param {Buffer} [to=new Uint8Array(20)] - the address of the contract this tx is too
+ * @param {Number} [caps=0] - the number of repsonse capablities this message has
+ * @param {Number} [ticks=0] - the number of to allocate for this message
+ * @param {Number} [ticksPrice=0] - the price by ticks
+ * @param {Number} [nonce=0]
+ * @param {Buffer} [data=0]
+ * @param {Buffer} [publicKey=new Uint8Array(32)]
+ * @param {Buffer} [signature=new Uint8Array([])]
+ * @param {Number} [recovery=0]
  */
 module.exports = class DfinityTx extends Message {
-  /**
-   * @constructor
-   * @param {Number} [version=0] - the tx version
-   * @param {Buffer} [to=new Uint8Array(20)] - the address of the contract this tx is too
-   * @param {Number} [caps=0] - the number of repsonse capablities this message has
-   * @param {Number} [ticks=0] - the number of to allocate for this message
-   * @param {Number} [ticksPrice=0] - the price by ticks
-   * @param {Number} [nonce=0]
-   * @param {Buffer} [data=0]
-   * @param {Buffer} [publicKey=new Uint8Array(32)]
-   * @param {Buffer} [signature=new Uint8Array([])]
-   * @param {Number} [recovery=0]
-   */
 
   /**
    * serializes the message
