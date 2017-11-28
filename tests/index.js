@@ -19,10 +19,10 @@ tape('tests', async t => {
   const pk = secp256k1.publicKeyCreate(sk)
 
   const signedTx = await tx.sign(sk)
-  const result = await DfinityTx.recoverPublicKey(signedTx)
-  t.deepEqual(result, pk, 'should validate message')
+  // const result = await DfinityTx.recoverPublicKey(signedTx)
 
   const tx2 = await DfinityTx.deserialize(signedTx)
+  t.deepEqual(tx2.publicKey, pk, 'should validate message')
   t.equals(tx2.ticks, '1000')
   t.deepEquals(tx2.serialize(), signedTx)
 

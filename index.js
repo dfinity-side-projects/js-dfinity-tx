@@ -4,7 +4,6 @@ const Message = require('primea-message')
 const Pipe = require('buffer-pipe')
 const secp256k1 = require('secp256k1')
 const leb128 = require('leb128').unsigned
-const crypto = require('node-webcrypto-shim')
 
 /**
  * This implements basic functions relating to Dfinity Transactions
@@ -33,7 +32,14 @@ module.exports = class DfinityTx extends Message {
       leb128.encode(this.ticks),
       leb128.encode(this.ticksPrice),
       leb128.encode(this.nonce),
-      leb128.encode(this.data.length),
+      this._serializeSig(inculdeSig)
+    ]
+    return Buffer.concat(args)
+  }
+
+  _serializeSig (inculdeSig) {
+    const args = [
+      leb128.encode(this.data.length + 65),
       this.data,
       inculdeSig ? this.signature : Buffer.from([]),
       inculdeSig ? Buffer.from([this.recovery]) : Buffer.from([])
@@ -56,27 +62,11 @@ module.exports = class DfinityTx extends Message {
   }
 
   /**
-   * Gets the SHA-256 hash for some given data
-   * @param {Buffer} data - the data to be hashed
-   * @returns {Promise} resolves with 32 bytes of hashed data
-   */
-  static hash (data) {
-    return crypto.subtle.digest({
-      name: 'SHA-256'
-    }, data).then(function (hash) {
-      return new Uint8Array(hash)
-    })
-  }
-
-  /**
    * Recovers a public key from a signed message
    * @param {Buffer} serialized - the serialized message
    * @returns {Promise} resolves with a 32 byte public key
    */
-  static async recoverPublicKey (serialized) {
-    const sig = serialized.subarray(-65, -1)
-    const recovery = serialized[serialized.length - 1]
-    const hash = await DfinityTx.hash(serialized.subarray(0, -65))
+  static async recoverPublicKey (hash, sig, recovery) {
     let publicKey
     try {
       publicKey = secp256k1.recover(hash, sig, recovery)
@@ -92,7 +82,6 @@ module.exports = class DfinityTx extends Message {
    * @return {Promise} resolve with a new instance of `DfinityTx`
    */
   static async deserialize (raw) {
-    const publicKey = await DfinityTx.recoverPublicKey(raw)
     const p = new Pipe(raw)
     const type = p.read(1)
     assert.equal(type[0], 1, 'txs should start with type 1')
@@ -103,13 +92,18 @@ module.exports = class DfinityTx extends Message {
       caps: leb128.read(p),
       ticks: leb128.read(p),
       ticksPrice: leb128.read(p),
-      nonce: leb128.read(p),
-      data: p.read(leb128.read(p)),
-      signature: p.read(64),
-      recovery: p.buffer[0],
-      publicKey: publicKey
+      nonce: leb128.read(p)
     }
+    await DfinityTx.parseSig(json, raw, p)
     return new DfinityTx(json)
+  }
+
+  static async parseSig (json, raw, p) {
+    const hash = await DfinityTx.hash(raw.subarray(0, -65))
+    json.data = p.read(Number(leb128.read(p)) - 65)
+    json.signature = p.read(64)
+    json.recovery = p.buffer[0]
+    json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
   }
 
   static get defaults () {

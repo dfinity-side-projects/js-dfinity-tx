@@ -20,7 +20,6 @@
     "assert": "^1.4.1",
     "buffer-pipe": "0.0.0",
     "leb128": "0.0.4",
-    "node-webcrypto-shim": "0.0.0",
     "primea-message": "^0.6.0",
     "safe-buffer": "^5.1.1",
     "secp256k1": "^3.3.1"
