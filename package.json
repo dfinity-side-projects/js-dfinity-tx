@@ -21,14 +21,14 @@
     "buffer-pipe": "0.0.0",
     "leb128": "0.0.4",
     "node-webcrypto-shim": "0.0.0",
-    "primea-message": "0.0.3",
+    "primea-message": "^0.6.0",
     "safe-buffer": "^5.1.1",
     "secp256k1": "^3.3.1"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
     "documentation": "^5.2.0",
-    "nyc": "^11.2.1",
+    "nyc": "^11.3.0",
     "standard": "^10.0.0",
     "tape": "^4.0.3"
   },
