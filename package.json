@@ -1,0 +1,43 @@
+{
+  "name": "dfinity-tx",
+  "version": "0.0.0",
+  "description": "This libary provides basic functions for creating and validating txs",
+  "main": "index.js",
+  "scripts": {
+    "coveralls": "npm run coverage && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc npm test",
+    "lint": "standard",
+    "test": "node ./tests/index.js",
+    "build:docs": "documentation build --github  -f md ./index.js > ./docs/index.md"
+  },
+  "keywords": [
+    "dfinity",
+    "tx"
+  ],
+  "author": "mjbecze <mjbecze@gmail.com>",
+  "license": "GPL-23.0",
+  "dependencies": {
+    "assert": "^1.4.1",
+    "buffer-pipe": "0.0.0",
+    "leb128": "0.0.4",
+    "node-webcrypto-shim": "0.0.0",
+    "primea-message": "0.0.3",
+    "safe-buffer": "^5.1.1",
+    "secp256k1": "^3.3.1"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.0",
+    "documentation": "^5.2.0",
+    "nyc": "^11.2.1",
+    "standard": "^10.0.0",
+    "tape": "^4.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:dfinity/js-dfinity-tx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dfinity/js-dfinity-tx/issues"
+  },
+  "homepage": "https://github.com/dfinity/js-dfinity-tx"
+}
