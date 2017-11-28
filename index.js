@@ -74,9 +74,9 @@ module.exports = class DfinityTx extends Message {
    * @returns {Promise} resolves with a 32 byte public key
    */
   static async recoverPublicKey (serialized) {
-    const sig = serialized.slice(-65, -1)
+    const sig = serialized.subarray(-65, -1)
     const recovery = serialized[serialized.length - 1]
-    const hash = await DfinityTx.hash(serialized.slice(0, -65))
+    const hash = await DfinityTx.hash(serialized.subarray(0, -65))
     let publicKey
     try {
       publicKey = secp256k1.recover(hash, sig, recovery)
