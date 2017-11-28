@@ -120,7 +120,6 @@ module.exports = class DfinityTx extends Message {
       ticks: 0,
       ticksPrice: 0,
       nonce: 0,
-      height: 0,
       data: new Uint8Array([]),
       publicKey: new Uint8Array(32),
       signature: new Uint8Array([]),
