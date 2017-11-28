@@ -20,7 +20,6 @@ const crypto = require('node-webcrypto-shim')
  * @param {Number} [recovery=0]
  */
 module.exports = class DfinityTx extends Message {
-
   /**
    * serializes the message
    * @return {Buffer}
