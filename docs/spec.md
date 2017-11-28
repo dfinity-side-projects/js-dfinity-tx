@@ -30,7 +30,7 @@ An ingress messages or transaction is a message broadcast by clients with the in
 | ticks | `varuint64` | The number of ticks that this message is aloted to run |
 | tick_price | `varuint32` | The price in that this message is paying per tick denoted in Dfinities |
 | nonce | `varuint64` ||
-| timestamp | `varuint128` || 
+| timestamp | `varuint64` || 
 | payload_len | `varuint32` | The length in bytes of the payload |
 | payload | `bytes*` ||
 | signature | `signature` ||
