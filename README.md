@@ -6,6 +6,8 @@
 
 # Synopsis
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/dfinity/js-dfinity-tx.svg)](https://greenkeeper.io/)
+
 This libary provides basic functions for creating and validating tx's
 
 ## Installation
