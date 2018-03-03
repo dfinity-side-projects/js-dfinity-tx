@@ -32,7 +32,7 @@ module.exports = class DfinityTx extends Message {
         this.ticks,
         this.ticksPrice,
         this.nonce,
-        this.data,
+        this.data
       ),
       includeSig ? this.signature : Buffer.from([]),
       includeSig ? Buffer.from([this.recovery]) : Buffer.from([])
@@ -87,11 +87,10 @@ module.exports = class DfinityTx extends Message {
       ticks: parts[4],
       ticksPrice: parts[5],
       nonce: parts[6],
-      data: parts[7],
+      data: parts[7]
     }
 
-    if (!isSigned)
-      return new DfinityTx(json)
+    if (!isSigned) { return new DfinityTx(json) }
 
     const sig = raw.subarray(-65)
     json.signature = sig.subarray(0, -1)
