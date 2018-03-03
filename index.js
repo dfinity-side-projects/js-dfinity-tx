@@ -3,6 +3,7 @@ const assert = require('assert')
 const Message = require('primea-message')
 const secp256k1 = require('secp256k1')
 const cbor = require('cbor')
+const NoFilter = require('nofilter')
 
 /**
  * This implements basic functions relating to Dfinity Transactions
@@ -23,9 +24,11 @@ module.exports = class DfinityTx extends Message {
    * @return {Buffer}
    */
   serialize (includeSig = this.signature.length !== 0) {
+    const txTag = new cbor.Tagged(44)
+
     return Buffer.concat([
       cbor.encode(
-        1,
+        txTag,
         this.version,
         this.to,
         this.caps,
@@ -74,11 +77,33 @@ module.exports = class DfinityTx extends Message {
    * @return {Promise} resolve with a new instance of `DfinityTx`
    */
   static async deserialize (raw) {
-    const isSigned = raw.length > 65
-    const rawData = isSigned ? raw.subarray(0, -65) : raw
-    const parts = cbor.decodeAllSync(rawData)
-    const type = parts[0]
-    assert.equal(type, 1, 'txs should start with type 1')
+    const c = new cbor.Decoder()
+    const s = new NoFilter(raw)
+    const parts = []
+    let isSigned = false
+
+    // decode up to 8 objects and assume the remainder is the signature
+    while (s.length > 0) {
+      const parser = c._parse()
+      let state = parser.next()
+      while (!state.done) {
+        const b = s.read(state.value)
+        if ((b == null) || (b.length !== state.value)) {
+          throw new Error('Insufficient data')
+        }
+        state = parser.next(b)
+      }
+      parts.push(cbor.Decoder.nullcheck(state.value))
+      if (parts.length === 8) {
+        if (s.length > 0) {
+          isSigned = true
+          break
+        }
+      }
+    }
+
+    const tag = parts[0]
+    assert.equal(tag.tag, 44, 'txs should be tagged 44')
 
     const json = {
       version: parts[1],
@@ -96,7 +121,7 @@ module.exports = class DfinityTx extends Message {
     json.signature = sig.subarray(0, -1)
     json.recovery = sig.subarray(-1)[0]
 
-    const hash = await DfinityTx.hash(rawData)
+    const hash = await DfinityTx.hash(raw.subarray(0, -65))
     json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
 
     return new DfinityTx(json)
