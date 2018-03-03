@@ -2,11 +2,11 @@
 [![Build Status](https://img.shields.io/travis/dfinity/js-dfinity-tx.svg?branch=master&style=flat-square)](https://travis-ci.org/dfinity/js-dfinity-tx)
 [![Coverage Status](https://img.shields.io/coveralls/dfinity/js-dfinity-tx.svg?style=flat-square)](https://coveralls.io/r/dfinity/js-dfinity-tx)
 
-[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
+[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
 # Synopsis
 
-This libary provides basic functions for creating and validating tx's
+This library provides basic functions for creating and validating txs
 
 ## Installation
 `npm install dfinity-tx`
@@ -37,7 +37,7 @@ tx.nonce = 1
 const secretKey = crypto.randomBytes(32)
 
 // sign the tx, this returns a signed serialized tx
-const signedTx = await tx.sign(sk)
+const signedTx = await tx.sign(secretKey)
 
 // parse a tx
 const tx2 = DfinityTx.deserialize(signedTx)
@@ -54,7 +54,7 @@ tx2.publicKey
 
 ## License
 
-[**(C) 2017 DFINITY STIFTUNG**](http://dfinity.network)
+[**(C) 2018 DFINITY STIFTUNG**](http://dfinity.network)
 
 All code and designs are open sourced under GPL V3.
 

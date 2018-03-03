@@ -1,6 +1,6 @@
 {
   "name": "dfinity-tx",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "This libary provides basic functions for creating and validating txs",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "buffer-pipe": "0.0.2",
-    "leb128": "0.0.4",
+    "cbor": "^4.0.0",
     "primea-message": "^0.6.1",
     "safe-buffer": "^5.1.1",
     "secp256k1": "^3.3.1"

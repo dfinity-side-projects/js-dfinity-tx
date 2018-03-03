@@ -1,15 +1,14 @@
 const Buffer = require('safe-buffer').Buffer
 const assert = require('assert')
 const Message = require('primea-message')
-const Pipe = require('buffer-pipe')
 const secp256k1 = require('secp256k1')
-const leb128 = require('leb128').unsigned
+const cbor = require('cbor')
 
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
- * @param {Buffer} [to=new Uint8Array(20)] - the address of the contract this tx is too
- * @param {Number} [caps=0] - the number of repsonse capablities this message has
+ * @param {Number} [to=0] - the function reference
+ * @param {Number} [caps=0] - the number of response capabilities this message has
  * @param {Number} [ticks=0] - the number of to allocate for this message
  * @param {Number} [ticksPrice=0] - the price by ticks
  * @param {Number} [nonce=0]
@@ -23,34 +22,27 @@ module.exports = class DfinityTx extends Message {
    * serializes the message
    * @return {Buffer}
    */
-  serialize (inculdeSig = this.signature.length !== 0) {
-    const args = [
-      Buffer.from([0x1]),
-      leb128.encode(this.version),
-      this.to,
-      leb128.encode(this.caps),
-      leb128.encode(this.ticks),
-      leb128.encode(this.ticksPrice),
-      leb128.encode(this.nonce),
-      this._serializeSig(inculdeSig)
-    ]
-    return Buffer.concat(args)
-  }
-
-  _serializeSig (inculdeSig) {
-    const args = [
-      leb128.encode(this.data.length + 65),
-      this.data,
-      inculdeSig ? this.signature : Buffer.from([]),
-      inculdeSig ? Buffer.from([this.recovery]) : Buffer.from([])
-    ]
-    return Buffer.concat(args)
+  serialize (includeSig = this.signature.length !== 0) {
+    return Buffer.concat([
+      cbor.encode(
+        1,
+        this.version,
+        this.to,
+        this.caps,
+        this.ticks,
+        this.ticksPrice,
+        this.nonce,
+        this.data,
+      ),
+      includeSig ? this.signature : Buffer.from([]),
+      includeSig ? Buffer.from([this.recovery]) : Buffer.from([])
+    ])
   }
 
   /**
    * signs a message and returns the serialized and signed message
    * @param {Buffer} secretKey - a 32 bytes buffer to use as a secret key
-   * @return {Promise} resolve with a Buffer containing the sinded message
+   * @return {Promise} resolve with a Buffer containing the signed message
    */
   async sign (secretKey) {
     const serialized = this.serialize(false)
@@ -58,7 +50,7 @@ module.exports = class DfinityTx extends Message {
     const sig = secp256k1.sign(hash, secretKey)
     this.signature = sig.signature
     this.recovery = sig.recovery
-    return Buffer.concat([serialized, sig.signature, Buffer.from([sig.recovery])])
+    return this.serialize()
   }
 
   /**
@@ -78,38 +70,43 @@ module.exports = class DfinityTx extends Message {
 
   /**
    * deserializes the message and returns a new instance of `DfinityTx`
-   * @param {Buffer} raw - the serialized raw messsage
+   * @param {Buffer} raw - the serialized raw message
    * @return {Promise} resolve with a new instance of `DfinityTx`
    */
   static async deserialize (raw) {
-    const p = new Pipe(raw)
-    const type = p.read(1)
-    assert.equal(type[0], 1, 'txs should start with type 1')
+    const isSigned = raw.length > 65
+    const rawData = isSigned ? raw.subarray(0, -65) : raw
+    const parts = cbor.decodeAllSync(rawData)
+    const type = parts[0]
+    assert.equal(type, 1, 'txs should start with type 1')
 
     const json = {
-      version: leb128.read(p),
-      to: p.read(20),
-      caps: leb128.read(p),
-      ticks: leb128.read(p),
-      ticksPrice: leb128.read(p),
-      nonce: leb128.read(p)
+      version: parts[1],
+      to: parts[2],
+      caps: parts[3],
+      ticks: parts[4],
+      ticksPrice: parts[5],
+      nonce: parts[6],
+      data: parts[7],
     }
-    await DfinityTx.parseSig(json, raw, p)
-    return new DfinityTx(json)
-  }
 
-  static async parseSig (json, raw, p) {
-    const hash = await DfinityTx.hash(raw.subarray(0, -65))
-    json.data = p.read(Number(leb128.read(p)) - 65)
-    json.signature = p.read(64)
-    json.recovery = p.buffer[0]
+    if (!isSigned)
+      return new DfinityTx(json)
+
+    const sig = raw.subarray(-65)
+    json.signature = sig.subarray(0, -1)
+    json.recovery = sig.subarray(-1)[0]
+
+    const hash = await DfinityTx.hash(rawData)
     json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
+
+    return new DfinityTx(json)
   }
 
   static get defaults () {
     return {
       version: 0,
-      to: new Uint8Array(20),
+      to: 0,
       caps: 0,
       ticks: 0,
       ticksPrice: 0,
