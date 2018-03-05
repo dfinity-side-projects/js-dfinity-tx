@@ -24,19 +24,18 @@ module.exports = class DfinityTx extends Message {
    * @return {Buffer}
    */
   serialize (includeSig = this.signature.length !== 0) {
-    const txTag = new cbor.Tagged(44)
+    const tag = new cbor.Tagged(44, [
+      this.version,
+      this.to,
+      this.caps,
+      this.ticks,
+      this.ticksPrice,
+      this.nonce,
+      this.data
+    ])
 
     return Buffer.concat([
-      cbor.encode(
-        txTag,
-        this.version,
-        this.to,
-        this.caps,
-        this.ticks,
-        this.ticksPrice,
-        this.nonce,
-        this.data
-      ),
+      cbor.encode(tag),
       includeSig ? this.signature : Buffer.from([]),
       includeSig ? Buffer.from([this.recovery]) : Buffer.from([])
     ])
@@ -79,47 +78,36 @@ module.exports = class DfinityTx extends Message {
   static async deserialize (raw) {
     const c = new cbor.Decoder()
     const s = new NoFilter(raw)
-    const parts = []
-    let isSigned = false
 
-    // decode up to 8 objects and assume the remainder is the signature
-    while (s.length > 0) {
-      const parser = c._parse()
-      let state = parser.next()
-      while (!state.done) {
-        const b = s.read(state.value)
-        if ((b == null) || (b.length !== state.value)) {
-          throw new Error('Insufficient data')
-        }
-        state = parser.next(b)
+    // decode first object and assume the remainder is the signature
+    const parser = c._parse()
+    let state = parser.next()
+    while (!state.done) {
+      const b = s.read(state.value)
+      if ((b == null) || (b.length !== state.value)) {
+        throw new Error('Insufficient data')
       }
-      parts.push(cbor.Decoder.nullcheck(state.value))
-      if (parts.length === 8) {
-        if (s.length > 0) {
-          isSigned = true
-          break
-        }
-      }
+      state = parser.next(b)
     }
+    const tag = cbor.Decoder.nullcheck(state.value)
+    const isSigned = s.length > 0
 
-    const tag = parts[0]
     assert.equal(tag.tag, 44, 'txs should be tagged 44')
 
     const json = {
-      version: parts[1],
-      to: parts[2],
-      caps: parts[3],
-      ticks: parts[4],
-      ticksPrice: parts[5],
-      nonce: parts[6],
-      data: parts[7]
+      version: tag.value[0],
+      to: tag.value[1],
+      caps: tag.value[2],
+      ticks: tag.value[3],
+      ticksPrice: tag.value[4],
+      nonce: tag.value[5],
+      data: tag.value[6]
     }
 
     if (!isSigned) { return new DfinityTx(json) }
 
-    const sig = raw.subarray(-65)
-    json.signature = sig.subarray(0, -1)
-    json.recovery = sig.subarray(-1)[0]
+    json.signature = s.read(64)
+    json.recovery = s.read(1)[0]
 
     const hash = await DfinityTx.hash(raw.subarray(0, -65))
     json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
