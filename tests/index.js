@@ -6,7 +6,7 @@ const DfinityTx = require('../')
 tape('tests', async t => {
   const tx = new DfinityTx({
     version: 1,
-    to: 10,
+    to: Buffer.from('d82b84f4646d61696e80d82900', 'hex'),
     caps: 4,
     ticks: 1000,
     ticksPrice: 0,

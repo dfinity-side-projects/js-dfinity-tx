@@ -8,7 +8,7 @@ const NoFilter = require('nofilter')
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
- * @param {Number} [to=0] - the function reference
+ * @param {Buffer} [to=0] - the function reference
  * @param {Number} [caps=0] - the number of response capabilities this message has
  * @param {Number} [ticks=0] - the number of to allocate for this message
  * @param {Number} [ticksPrice=0] - the price by ticks
@@ -118,7 +118,7 @@ module.exports = class DfinityTx extends Message {
   static get defaults () {
     return {
       version: 0,
-      to: 0,
+      to: new Uint8Array([]),
       caps: 0,
       ticks: 0,
       ticksPrice: 0,
