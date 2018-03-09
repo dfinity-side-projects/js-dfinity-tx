@@ -77,6 +77,8 @@ module.exports = class DfinityTx extends Message {
    */
   static async deserialize (raw) {
     const c = new cbor.Decoder()
+    if (!Buffer.isBuffer(raw))
+      raw = Buffer.from(raw)
     const s = new NoFilter(raw)
 
     // decode first object and assume the remainder is the signature

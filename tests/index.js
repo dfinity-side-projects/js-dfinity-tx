@@ -15,7 +15,8 @@ tape('tests', async t => {
   })
 
   const unsignedTx = tx.serialize()
-  const tx1 = await DfinityTx.deserialize(unsignedTx)
+  const unsignedTxUint8 = new Uint8Array(tx.serialize())
+  const tx1 = await DfinityTx.deserialize(unsignedTxUint8)
   t.equals(tx1.ticks, 1000, 'should validate unsigned message')
   t.deepEquals(tx1.serialize(), unsignedTx)
 
