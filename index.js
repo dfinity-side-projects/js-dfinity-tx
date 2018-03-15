@@ -1,6 +1,7 @@
+const EventEmitter = require('events')
 const Buffer = require('safe-buffer').Buffer
 const assert = require('assert')
-const Message = require('primea-message')
+const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
 const cbor = require('cbor')
 const NoFilter = require('nofilter')
@@ -18,7 +19,23 @@ const NoFilter = require('nofilter')
  * @param {Buffer} [signature=new Uint8Array([])]
  * @param {Number} [recovery=0]
  */
-module.exports = class DfinityTx extends Message {
+module.exports = class DfinityTx extends EventEmitter {
+  constructor (opts = {}) {
+    super()
+    const defaults = this.constructor.defaults
+    this._opts = Object.assign(defaults, opts)
+    Object.keys(this._opts).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: function () {
+          return this._opts[key]
+        },
+        set: function (y) {
+          this._opts[key] = y
+        }
+      })
+    })
+  }
+
   /**
    * serializes the message
    * @return {Buffer}
@@ -48,7 +65,7 @@ module.exports = class DfinityTx extends Message {
    */
   async sign (secretKey) {
     const serialized = this.serialize(false)
-    const hash = await DfinityTx.hash(serialized)
+    const hash = await DfinityTx._hash(serialized)
     const sig = secp256k1.sign(hash, secretKey)
     this.signature = sig.signature
     this.recovery = sig.recovery
@@ -111,10 +128,25 @@ module.exports = class DfinityTx extends Message {
     json.signature = s.read(64)
     json.recovery = s.read(1)[0]
 
-    const hash = await DfinityTx.hash(raw.subarray(0, -65))
+    const hash = await DfinityTx._hash(raw.subarray(0, -65))
     json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
 
     return new DfinityTx(json)
+  }
+
+  /**
+   * Gets the SHA-256 hash of the serialized tx
+   * @param {number} length - the number of bytes of the hash to return. must be <= 32
+   * @returns {Buffer} the hashed tx
+   */
+  hash (length = 32) {
+    return DfinityTx._hash(this.serialize(), length)
+  }
+
+  static _hash (data, length) {
+    const hash = crypto.createHash('sha256')
+    hash.update(data)
+    return hash.digest().slice(0, length)
   }
 
   static get defaults () {

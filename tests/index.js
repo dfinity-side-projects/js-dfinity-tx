@@ -30,6 +30,11 @@ tape('tests', async t => {
   t.deepEqual(tx2.publicKey, pk, 'should recover signed message')
   t.deepEquals(tx2.serialize(), signedTx)
 
+  const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
+  const tx2hash = Buffer.from('e5e8faab4e0ad32b1e9001852d14ce7558970b56db049df30770e9ec805dcbbd', 'hex')
+  await tx2.sign(sk2)
+  t.deepEquals(tx2.hash(), tx2hash, 'should hash identically')
+
   tx2.signature[0] = Buffer.alloc(64).fill(0xff)
 
   const fail = await DfinityTx.recoverPublicKey(tx2.serialize(), tx2.recovery)
