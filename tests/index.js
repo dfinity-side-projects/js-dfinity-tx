@@ -6,12 +6,12 @@ const DfinityTx = require('../')
 tape('tests', async t => {
   const tx = new DfinityTx({
     version: 1,
-    to: Buffer.from('d82b84f4646d61696e80d82900', 'hex'),
-    caps: 4,
+    actorId: Buffer.from('d82b84f4646d61696e80d82900', 'hex'),
+    funcname: "main",
+    args: new Array([1,1.2,3,4]),
     ticks: 1000,
     ticksPrice: 0,
     nonce: 0,
-    data: new Uint8Array([])
   })
 
   const unsignedTx = tx.serialize()
@@ -31,7 +31,7 @@ tape('tests', async t => {
   t.deepEquals(tx2.serialize(), signedTx)
 
   const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
-  const tx2hash = Buffer.from('e5e8faab4e0ad32b1e9001852d14ce7558970b56db049df30770e9ec805dcbbd', 'hex')
+  const tx2hash = Buffer.from('68650e702f7c47e241a95ca5ef1fb1d1e4dc8d94b2f1729bde6144b5c98964f5', 'hex')
   await tx2.sign(sk2)
   t.deepEquals(tx2.hash(), tx2hash, 'should hash identically')
 

@@ -9,12 +9,12 @@ const NoFilter = require('nofilter')
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
- * @param {Buffer} [to=0] - the function reference
- * @param {Number} [caps=0] - the number of response capabilities this message has
- * @param {Number} [ticks=0] - the number of to allocate for this message
- * @param {Number} [ticksPrice=0] - the price by ticks
+ * @param {Buffer} [actorId=0] - the actor's ID
+ * @param {String} [funcname=0] - the name of an exported function of the actor
+ * @param {Array}  [args=0] - the function arguments, an array of integers or floats
+ * @param {Number} [ticks=0] - the number of ticks allocate for this message
+ * @param {Number} [ticksPrice=0] - the price to pay for the ticks
  * @param {Number} [nonce=0]
- * @param {Buffer} [data=0]
  * @param {Buffer} [publicKey=new Uint8Array(32)]
  * @param {Buffer} [signature=new Uint8Array([])]
  * @param {Number} [recovery=0]
@@ -43,12 +43,12 @@ module.exports = class DfinityTx extends EventEmitter {
   serialize (includeSig = this.signature.length !== 0) {
     const tag = new cbor.Tagged(44, [
       this.version,
-      this.to,
-      this.caps,
+      this.actorId,
+      this.funcname,
+      this.args,
       this.ticks,
       this.ticksPrice,
       this.nonce,
-      this.data
     ])
 
     return Buffer.concat([
@@ -115,12 +115,12 @@ module.exports = class DfinityTx extends EventEmitter {
 
     const json = {
       version: tag.value[0],
-      to: tag.value[1],
-      caps: tag.value[2],
-      ticks: tag.value[3],
-      ticksPrice: tag.value[4],
-      nonce: tag.value[5],
-      data: tag.value[6]
+      actorId: tag.value[1],
+      funcname: tag.value[2],
+      args: tag.value[3],
+      ticks: tag.value[4],
+      ticksPrice: tag.value[5],
+      nonce: tag.value[6]
     }
 
     if (!isSigned) { return new DfinityTx(json) }
@@ -152,12 +152,12 @@ module.exports = class DfinityTx extends EventEmitter {
   static get defaults () {
     return {
       version: 0,
-      to: new Uint8Array([]),
-      caps: 0,
+      actorId: new Uint8Array([]),
+      funcname: "",
+      args: new Array([]),
       ticks: 0,
       ticksPrice: 0,
       nonce: 0,
-      data: new Uint8Array([]),
       publicKey: new Uint8Array(32),
       signature: new Uint8Array([]),
       recovery: 0
