@@ -9,8 +9,8 @@ const NoFilter = require('nofilter')
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
- * @param {Buffer} [actorId=0] - the actor's ID
- * @param {String} [funcname=0] - the name of an exported function of the actor
+ * @param {Buffer} [actorId=new Uint8Array([])] - the actor's ID
+ * @param {String} [funcName=""] - the name of an exported function of the actor
  * @param {Array}  [args=0] - the function arguments, an array of integers or floats
  * @param {Number} [ticks=0] - the number of ticks allocate for this message
  * @param {Number} [ticksPrice=0] - the price to pay for the ticks
@@ -44,8 +44,8 @@ module.exports = class DfinityTx extends EventEmitter {
     const tag = new cbor.Tagged(44, [
       this.version,
       this.actorId,
-      this.funcname,
-      this.args,
+      this.funcName,
+      cbor.encode(this.args),
       this.ticks,
       this.ticksPrice,
       this.nonce,
@@ -116,8 +116,8 @@ module.exports = class DfinityTx extends EventEmitter {
     const json = {
       version: tag.value[0],
       actorId: tag.value[1],
-      funcname: tag.value[2],
-      args: tag.value[3],
+      funcName: tag.value[2],
+      args: cbor.decode(tag.value[3]),
       ticks: tag.value[4],
       ticksPrice: tag.value[5],
       nonce: tag.value[6]
@@ -153,7 +153,7 @@ module.exports = class DfinityTx extends EventEmitter {
     return {
       version: 0,
       actorId: new Uint8Array([]),
-      funcname: "",
+      funcName: "",
       args: new Array([]),
       ticks: 0,
       ticksPrice: 0,

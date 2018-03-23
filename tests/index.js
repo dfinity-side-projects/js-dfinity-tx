@@ -31,7 +31,7 @@ tape('tests', async t => {
   t.deepEquals(tx2.serialize(), signedTx)
 
   const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
-  const tx2hash = Buffer.from('68650e702f7c47e241a95ca5ef1fb1d1e4dc8d94b2f1729bde6144b5c98964f5', 'hex')
+  const tx2hash = Buffer.from('6c973dd8be79015c2b5aea369ab9dfff966ec6e91feaa088f744460eca5124e6', 'hex')
   await tx2.sign(sk2)
   t.deepEquals(tx2.hash(), tx2hash, 'should hash identically')
 
