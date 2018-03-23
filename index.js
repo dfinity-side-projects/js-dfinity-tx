@@ -3,7 +3,7 @@ const Buffer = require('safe-buffer').Buffer
 const assert = require('assert')
 const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
-const cbor = require('cbor')
+const cbor = require('borc')
 const NoFilter = require('nofilter')
 
 /**
@@ -90,34 +90,37 @@ module.exports = class DfinityTx extends EventEmitter {
    * @return {DfinityTx} a new instance of `DfinityTx`
    */
   static deserialize(raw) {
-    const c = cbor.decode(raw)
-    let json, tx = 0, pk = Buffer.from([]), sig = Buffer.from([])
+    const d = DfinityTx.getDecoder()
+    const c = d.decodeFirst(raw)
+    let tx
     if (c instanceof Array) {
       assert.equal(c.length, 3)
       tx = c[0]
-      pk = c[1]
-      sig = c[2]
-    } else {
+      tx.publicKey = c[1]
+      tx.signature = secp256k1.signatureImport(c[2])
+    }
+    else {
       tx = c
     }
-    if (tx instanceof cbor.Tagged) {
-      assert.equal(tx.tag, 44)
-      const v = tx.value
-      json = {
-        version: v[0],
-        actorId: v[1],
-        funcName: v[2],
-        args: cbor.decode(v[3]),
-        ticks: v[4],
-        ticksPrice: v[5],
-        nonce: v[6],
-        publicKey: pk,
-        signature: sig.length > 0 ? secp256k1.signatureImport(sig) : sig
+    return tx
+  }
+
+  static getDecoder() {
+    return new cbor.Decoder({ 
+      tags : {
+        44: (val) => {
+          return new DfinityTx({
+            version: val[0],
+            actorId: val[1],
+            funcName: val[2],
+            args: cbor.decode(val[3]),
+            ticks: val[4],
+            ticksPrice: val[5],
+            nonce: val[6]
+          })
+        }
       }
-    } else {
-      assert.fail("no DfinityTx object found")
-    }
-    return new DfinityTx(json)
+    })
   }
 
   /**

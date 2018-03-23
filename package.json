@@ -18,7 +18,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "assert": "^1.4.1",
-    "cbor": "^4.0.0",
+    "borc": "git+https://github.com:dignifiedquire/borc.git#fix/nested-array",
     "events": "^2.0.0",
     "primea-message": "^0.6.1",
     "safe-buffer": "^5.1.1",
