@@ -9,15 +9,14 @@ const NoFilter = require('nofilter')
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
- * @param {Buffer} [actorId=new Uint8Array([])] - the actor's ID
+ * @param {Buffer} [actorId=Buffer.from([])] - the actor's ID
  * @param {String} [funcName=""] - the name of an exported function of the actor
  * @param {Array}  [args=0] - the function arguments, an array of integers or floats
  * @param {Number} [ticks=0] - the number of ticks allocate for this message
  * @param {Number} [ticksPrice=0] - the price to pay for the ticks
  * @param {Number} [nonce=0]
- * @param {Buffer} [publicKey=new Uint8Array(32)]
- * @param {Buffer} [signature=new Uint8Array([])]
- * @param {Number} [recovery=0]
+ * @param {Buffer} [publicKey=Buffer.from([])]
+ * @param {Buffer} [signature=Buffer.from([])]
  */
 module.exports = class DfinityTx extends EventEmitter {
   constructor (opts = {}) {
@@ -51,86 +50,73 @@ module.exports = class DfinityTx extends EventEmitter {
       this.nonce,
     ])
 
-    return Buffer.concat([
-      cbor.encode(tag),
-      includeSig ? this.signature : Buffer.from([]),
-      includeSig ? Buffer.from([this.recovery]) : Buffer.from([])
-    ])
+    return (includeSig ? 
+      cbor.encode([
+        tag, 
+        this.publicKey, 
+        secp256k1.signatureExport(this.signature)
+      ]) : cbor.encode(tag)
+    )
   }
 
   /**
-   * signs a message and returns the serialized and signed message
+   * signs a message and returns the serialized and signed message. Note that
+   * the public key and signature is added to the original transaction too.
    * @param {Buffer} secretKey - a 32 bytes buffer to use as a secret key
-   * @return {Promise} resolve with a Buffer containing the signed message
+   * @return {Buffer} Buffer containing the serialised transaction.
    */
-  async sign (secretKey) {
+  sign (secretKey) {
     const serialized = this.serialize(false)
-    const hash = await DfinityTx._hash(serialized)
+    const hash = DfinityTx._hash(serialized)
     const sig = secp256k1.sign(hash, secretKey)
+    this.publicKey = secp256k1.publicKeyCreate(secretKey)
     this.signature = sig.signature
-    this.recovery = sig.recovery
     return this.serialize()
   }
 
   /**
-   * Recovers a public key from a signed message
-   * @param {Buffer} serialized - the serialized message
-   * @returns {Promise} resolves with a 32 byte public key
+   * verify the signature of a `DfinityTx`.
+   * @return {Bool}
    */
-  static async recoverPublicKey (hash, sig, recovery) {
-    let publicKey
-    try {
-      publicKey = secp256k1.recover(hash, sig, recovery)
-    } catch (e) {
-      publicKey = false
-    }
-    return publicKey
-  }
+  verify() {
+    const serialized = this.serialize(false)
+    const hash = DfinityTx._hash(serialized)
+    return secp256k1.verify(hash, this.signature, this.publicKey)
+  } 
 
   /**
    * deserializes the message and returns a new instance of `DfinityTx`
-   * @param {Buffer} raw - the serialized raw message
-   * @return {Promise} resolve with a new instance of `DfinityTx`
+   * @param {Buffer} raw - the serialized raw message that is either signed or unsigned.
+   * @return {DfinityTx} a new instance of `DfinityTx`
    */
-  static async deserialize (raw) {
-    const c = new cbor.Decoder()
-    if (!Buffer.isBuffer(raw))
-      raw = Buffer.from(raw)
-    const s = new NoFilter(raw)
-
-    // decode first object and assume the remainder is the signature
-    const parser = c._parse()
-    let state = parser.next()
-    while (!state.done) {
-      const b = s.read(state.value)
-      if ((b == null) || (b.length !== state.value)) {
-        throw new Error('Insufficient data')
+  static deserialize(raw) {
+    const c = cbor.decode(raw)
+    let json, tx = 0, pk = Buffer.from([]), sig = Buffer.from([])
+    if (c instanceof Array) {
+      assert.equal(c.length, 3)
+      tx = c[0]
+      pk = c[1]
+      sig = c[2]
+    } else {
+      tx = c
+    }
+    if (tx instanceof cbor.Tagged) {
+      assert.equal(tx.tag, 44)
+      const v = tx.value
+      json = {
+        version: v[0],
+        actorId: v[1],
+        funcName: v[2],
+        args: cbor.decode(v[3]),
+        ticks: v[4],
+        ticksPrice: v[5],
+        nonce: v[6],
+        publicKey: pk,
+        signature: sig.length > 0 ? secp256k1.signatureImport(sig) : sig
       }
-      state = parser.next(b)
+    } else {
+      assert.fail("no DfinityTx object found")
     }
-    const tag = cbor.Decoder.nullcheck(state.value)
-    const isSigned = s.length > 0
-
-    assert.equal(tag.tag, 44, 'txs should be tagged 44')
-
-    const json = {
-      version: tag.value[0],
-      actorId: tag.value[1],
-      funcName: tag.value[2],
-      args: cbor.decode(tag.value[3]),
-      ticks: tag.value[4],
-      ticksPrice: tag.value[5],
-      nonce: tag.value[6]
-    }
-
-    if (!isSigned) { return new DfinityTx(json) }
-
-    json.signature = s.read(64)
-    json.recovery = s.read(1)[0]
-
-    const hash = await DfinityTx._hash(raw.subarray(0, -65))
-    json.publicKey = await DfinityTx.recoverPublicKey(hash, json.signature, json.recovery)
-
     return new DfinityTx(json)
   }
 
@@ -152,15 +138,14 @@ module.exports = class DfinityTx extends EventEmitter {
   static get defaults () {
     return {
       version: 0,
-      actorId: new Uint8Array([]),
+      actorId: Buffer.from([]),
       funcName: "",
       args: new Array([]),
       ticks: 0,
       ticksPrice: 0,
       nonce: 0,
-      publicKey: new Uint8Array(32),
-      signature: new Uint8Array([]),
-      recovery: 0
+      publicKey: Buffer.from([]),
+      signature: Buffer.from([]),
     }
   }
 }

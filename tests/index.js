@@ -15,34 +15,27 @@ tape('tests', async t => {
   })
 
   const unsignedTx = tx.serialize()
-  const unsignedTxUint8 = new Uint8Array(tx.serialize())
-  const tx1 = await DfinityTx.deserialize(unsignedTxUint8)
+  const tx1 = DfinityTx.deserialize(unsignedTx)
   t.equals(tx1.ticks, 1000, 'should validate unsigned message')
   t.deepEquals(tx1.serialize(), unsignedTx)
 
   const sk = crypto.randomBytes(32)
   const pk = secp256k1.publicKeyCreate(sk)
 
-  const signedTx = await tx.sign(sk)
+  const signedTx = tx.sign(sk)
+  t.equals(tx.verify(), true, 'should validate signed message')
 
-  const tx2 = await DfinityTx.deserialize(signedTx)
+  const tx2 = DfinityTx.deserialize(signedTx)
   t.equals(tx2.ticks, 1000, 'should validate signed message')
-  t.deepEqual(tx2.publicKey, pk, 'should recover signed message')
+  t.deepEqual(tx2.publicKey, pk, 'public key should match')
+  t.equals(tx2.verify(), true, 'should validate signed message')
   t.deepEquals(tx2.serialize(), signedTx)
 
   const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
-  const tx2hash = Buffer.from('6c973dd8be79015c2b5aea369ab9dfff966ec6e91feaa088f744460eca5124e6', 'hex')
-  await tx2.sign(sk2)
+  const tx2hash = Buffer.from('43d85421120e12760d086504d3aec1c29f4e3e70b1176df681aaf9756e87bd83', 'hex')
+
+  tx2.sign(sk2)
   t.deepEquals(tx2.hash(), tx2hash, 'should hash identically')
-
-  tx2.signature[0] = Buffer.alloc(64).fill(0xff)
-
-  const fail = await DfinityTx.recoverPublicKey(tx2.serialize(), tx2.recovery)
-  t.notDeepEqual(fail, pk, 'shouldn\'t recover invalid sig')
-
-  tx2.recovery = 2
-  const fail2 = await DfinityTx.recoverPublicKey(tx2.serialize(), tx2.recovery)
-  t.equals(fail2, false, 'should fail with invalid recovery')
 
   t.end()
 })
