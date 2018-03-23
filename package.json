@@ -20,7 +20,6 @@
     "assert": "^1.4.1",
     "borc": "git+https://github.com:dignifiedquire/borc.git#fix/nested-array",
     "events": "^2.0.0",
-    "primea-message": "^0.6.1",
     "safe-buffer": "^5.1.1",
     "secp256k1": "^3.3.1"
   },

@@ -4,7 +4,6 @@ const assert = require('assert')
 const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
 const cbor = require('borc')
-const NoFilter = require('nofilter')
 
 /**
  * This implements basic functions relating to Dfinity Transactions
@@ -15,8 +14,6 @@ const NoFilter = require('nofilter')
  * @param {Number} [ticks=0] - the number of ticks allocate for this message
  * @param {Number} [ticksPrice=0] - the price to pay for the ticks
  * @param {Number} [nonce=0]
- * @param {Buffer} [publicKey=Buffer.from([])]
- * @param {Buffer} [signature=Buffer.from([])]
  */
 module.exports = class DfinityTx extends EventEmitter {
   constructor (opts = {}) {
@@ -36,11 +33,10 @@ module.exports = class DfinityTx extends EventEmitter {
   }
 
   /**
-   * serializes the message
-   * @return {Buffer}
+   * Allow cbor encoder to directly encode DfinityTx object.
    */
-  serialize (includeSig = this.signature.length !== 0) {
-    const tag = new cbor.Tagged(44, [
+  encodeCBOR (gen) {
+    return gen.write(new cbor.Tagged(44, [
       this.version,
       this.actorId,
       this.funcName,
@@ -48,40 +44,34 @@ module.exports = class DfinityTx extends EventEmitter {
       this.ticks,
       this.ticksPrice,
       this.nonce,
-    ])
-
-    return (includeSig ? 
-      cbor.encode([
-        tag, 
-        this.publicKey, 
-        secp256k1.signatureExport(this.signature)
-      ]) : cbor.encode(tag)
-    )
+    ]))
   }
 
   /**
-   * signs a message and returns the serialized and signed message. Note that
-   * the public key and signature is added to the original transaction too.
+   * signs a message and returns the serialized and signed DfinityTx message.
    * @param {Buffer} secretKey - a 32 bytes buffer to use as a secret key
-   * @return {Buffer} Buffer containing the serialised transaction.
+   * @return {Buffer} Buffer containing serialized array of [ transaction, publicKey, signature ].
    */
   sign (secretKey) {
-    const serialized = this.serialize(false)
+    const serialized = cbor.encode(this)
     const hash = DfinityTx._hash(serialized)
     const sig = secp256k1.sign(hash, secretKey)
-    this.publicKey = secp256k1.publicKeyCreate(secretKey)
-    this.signature = sig.signature
-    return this.serialize()
+    return cbor.encode([
+      this,
+      secp256k1.publicKeyCreate(secretKey),
+      secp256k1.signatureExport(sig.signature)
+    ])
   }
 
   /**
-   * verify the signature of a `DfinityTx`.
+   * verify the signature of a serialized and signed DfinityTx message.
    * @return {Bool}
    */
-  verify() {
-    const serialized = this.serialize(false)
-    const hash = DfinityTx._hash(serialized)
-    return secp256k1.verify(hash, this.signature, this.publicKey)
+  static verify(msg) {
+    const decoder = DfinityTx.getDecoder()
+    let [tx, publicKey, signature] = decoder.decodeFirst(msg)
+    const hash = tx.hash()
+    return secp256k1.verify(hash, secp256k1.signatureImport(signature), publicKey)
   } 
 
   /**
@@ -89,23 +79,15 @@ module.exports = class DfinityTx extends EventEmitter {
    * @param {Buffer} raw - the serialized raw message that is either signed or unsigned.
    * @return {DfinityTx} a new instance of `DfinityTx`
    */
-  static deserialize(raw) {
-    const d = DfinityTx.getDecoder()
-    const c = d.decodeFirst(raw)
-    let tx
-    if (c instanceof Array) {
-      assert.equal(c.length, 3)
-      tx = c[0]
-      tx.publicKey = c[1]
-      tx.signature = secp256k1.signatureImport(c[2])
-    }
-    else {
-      tx = c
-    }
-    return tx
+  static decode(raw) {
+    return DfinityTx.getDecoder().decodeFirst(raw)
   }
 
-  static getDecoder() {
+  /**
+   * Get a CBOR decoder that can handle DfinityTx custom tag.
+   * @return {Decoder} a new Decoder instance of `cbor.Decoder`.
+   */
+   static getDecoder() {
     return new cbor.Decoder({ 
       tags : {
         44: (val) => {
@@ -129,7 +111,7 @@ module.exports = class DfinityTx extends EventEmitter {
    * @returns {Buffer} the hashed tx
    */
   hash (length = 32) {
-    return DfinityTx._hash(this.serialize(), length)
+    return DfinityTx._hash(cbor.encode(this), length)
   }
 
   static _hash (data, length) {
@@ -146,9 +128,7 @@ module.exports = class DfinityTx extends EventEmitter {
       args: new Array([]),
       ticks: 0,
       ticksPrice: 0,
-      nonce: 0,
-      publicKey: Buffer.from([]),
-      signature: Buffer.from([]),
+      nonce: 0
     }
   }
 }
