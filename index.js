@@ -5,6 +5,8 @@ const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
 const cbor = require('borc')
 
+const CBOR_TAG = 45
+
 /**
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
@@ -36,7 +38,7 @@ module.exports = class DfinityTx extends EventEmitter {
    * Allow cbor encoder to directly encode DfinityTx object.
    */
   encodeCBOR (gen) {
-    return gen.write(new cbor.Tagged(44, [
+    return gen.write(new cbor.Tagged(CBOR_TAG, [
       this.version,
       this.actorId,
       this.funcName,
@@ -72,7 +74,7 @@ module.exports = class DfinityTx extends EventEmitter {
     let [tx, publicKey, signature] = decoder.decodeFirst(msg)
     const hash = tx.hash()
     return secp256k1.verify(hash, secp256k1.signatureImport(signature), publicKey)
-  } 
+  }
 
   /**
    * deserializes the message and returns a new instance of `DfinityTx`
@@ -88,9 +90,9 @@ module.exports = class DfinityTx extends EventEmitter {
    * @return {Decoder} a new Decoder instance of `cbor.Decoder`.
    */
    static getDecoder() {
-    return new cbor.Decoder({ 
+    return new cbor.Decoder({
       tags : {
-        44: (val) => {
+        [CBOR_TAG]: (val) => {
           return new DfinityTx({
             version: val[0],
             actorId: val[1],
