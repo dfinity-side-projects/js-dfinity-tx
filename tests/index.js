@@ -32,7 +32,7 @@ tape('tests', async t => {
   t.deepEquals(cbor.encode([tx2, publicKey, signature]), signedTx, "should serialize the same")
 
   const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
-  const tx2hash = Buffer.from('34e2d6a7070a5c1b318a993171acf62039068a2f2168fc2a5bf3899ed1125fe4', 'hex')
+  const tx2hash = Buffer.from('eb40566d9f00a9ab4d38f61e237b5c976368fe5ba03d2a431d2c0dbafbc92e8c', 'hex')
 
   const signedTx2 = tx2.sign(sk2)
   t.deepEquals(DfinityTx._hash(signedTx2), tx2hash, 'should hash identically')

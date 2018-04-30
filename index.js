@@ -5,7 +5,7 @@ const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
 const cbor = require('borc')
 
-const CBOR_TAG = 45
+const CBOR_TAG = 40
 
 /**
  * This implements basic functions relating to Dfinity Transactions
