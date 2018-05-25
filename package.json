@@ -19,7 +19,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "borc": "^2.0.3",
-    "events": "^2.0.0",
+    "events": "^3.0.0",
     "safe-buffer": "^5.1.1",
     "secp256k1": "^3.3.1"
   },
