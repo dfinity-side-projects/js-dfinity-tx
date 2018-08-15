@@ -8,11 +8,11 @@ tape('tests', async t => {
   const tx = new DfinityTx({
     version: 1,
     actorId: Buffer.from('d82b84f4646d61696e80d82900', 'hex'),
-    funcname: "main",
+    funcName: "main",
     args: new Array([1,1.2,3,4]),
     ticks: 1000,
-    ticksPrice: 0,
-    nonce: 0,
+    ticksPrice: 10,
+    nonce: 1,
   })
 
   const unsignedTx = cbor.encode(tx)
@@ -32,7 +32,7 @@ tape('tests', async t => {
   t.deepEquals(cbor.encode([tx2, publicKey, signature]), signedTx, "should serialize the same")
 
   const sk2 = Buffer.from('ac15e6273a31c0c22cbad5241a875872108278a690423d912e6d33cc7544bd71', 'hex')
-  const tx2hash = Buffer.from('eb40566d9f00a9ab4d38f61e237b5c976368fe5ba03d2a431d2c0dbafbc92e8c', 'hex')
+  const tx2hash = Buffer.from('1ffb7212d56cfe1f8a0b3f8a50ce4dc0232285acb82cfd6f5e75fa7fe0d92719', 'hex')
 
   const signedTx2 = tx2.sign(sk2)
   t.deepEquals(DfinityTx._hash(signedTx2), tx2hash, 'should hash identically')

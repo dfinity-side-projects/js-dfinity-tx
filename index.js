@@ -11,7 +11,7 @@ const CBOR_TAG = 40
  * This implements basic functions relating to Dfinity Transactions
  * @param {Number} [version=0] - the tx version
  * @param {Buffer} [actorId=Buffer.from([])] - the actor's ID
- * @param {String} [funcName=""] - the name of an exported function of the actor
+ * @param {Buffer} [funcName=Buffer.from('')] - the name of an exported function of the actor
  * @param {Array}  [args=0] - the function arguments, an array of integers or floats
  * @param {Number} [ticks=0] - the number of ticks allocate for this message
  * @param {Number} [ticksPrice=0] - the price to pay for the ticks
@@ -21,6 +21,9 @@ module.exports = class DfinityTx extends EventEmitter {
   constructor (opts = {}) {
     super()
     const defaults = this.constructor.defaults
+    if (!Buffer.isBuffer(opts.funcName)) {
+      opts.funcName = Buffer.from(opts.funcName)
+    }
     this._opts = Object.assign(defaults, opts)
     Object.keys(this._opts).forEach(key => {
       Object.defineProperty(this, key, {
@@ -126,7 +129,7 @@ module.exports = class DfinityTx extends EventEmitter {
     return {
       version: 0,
       actorId: Buffer.from([]),
-      funcName: "",
+      funcName: Buffer.from(''),
       args: new Array([]),
       ticks: 0,
       ticksPrice: 0,
