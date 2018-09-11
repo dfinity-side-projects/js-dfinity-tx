@@ -21,7 +21,7 @@ module.exports = class DfinityTx extends EventEmitter {
   constructor (opts = {}) {
     super()
     const defaults = this.constructor.defaults
-    if (!Buffer.isBuffer(opts.funcName)) {
+    if (typeof opts.funcName === 'string') {
       opts.funcName = Buffer.from(opts.funcName)
     }
     this._opts = Object.assign(defaults, opts)
