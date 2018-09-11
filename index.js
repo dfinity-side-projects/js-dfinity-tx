@@ -1,6 +1,5 @@
 const EventEmitter = require('events')
 const Buffer = require('safe-buffer').Buffer
-const assert = require('assert')
 const crypto = require('crypto')
 const secp256k1 = require('secp256k1')
 const cbor = require('borc')
@@ -48,7 +47,7 @@ module.exports = class DfinityTx extends EventEmitter {
       cbor.encode(this.args),
       this.ticks,
       this.ticksPrice,
-      this.nonce,
+      this.nonce
     ]))
   }
 
@@ -72,7 +71,7 @@ module.exports = class DfinityTx extends EventEmitter {
    * verify the signature of a serialized and signed DfinityTx message.
    * @return {Bool}
    */
-  static verify(msg) {
+  static verify (msg) {
     const decoder = DfinityTx.getDecoder()
     let [tx, publicKey, signature] = decoder.decodeFirst(msg)
     const hash = tx.hash()
@@ -84,7 +83,7 @@ module.exports = class DfinityTx extends EventEmitter {
    * @param {Buffer} raw - the serialized raw message that is either signed or unsigned.
    * @return {DfinityTx} a new instance of `DfinityTx`
    */
-  static decode(raw) {
+  static decode (raw) {
     return DfinityTx.getDecoder().decodeFirst(raw)
   }
 
@@ -92,9 +91,9 @@ module.exports = class DfinityTx extends EventEmitter {
    * Get a CBOR decoder that can handle DfinityTx custom tag.
    * @return {Decoder} a new Decoder instance of `cbor.Decoder`.
    */
-   static getDecoder() {
+  static getDecoder () {
     return new cbor.Decoder({
-      tags : {
+      tags: {
         [CBOR_TAG]: (val) => {
           return new DfinityTx({
             version: val[0],
