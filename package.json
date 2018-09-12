@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:dfinity/js-dfinity-tx.git"
+    "url": "https://github.com/dfinity/js-dfinity-tx.git"
   },
   "bugs": {
     "url": "https://github.com/dfinity/js-dfinity-tx/issues"
